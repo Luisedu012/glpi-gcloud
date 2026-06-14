@@ -1,0 +1,20 @@
+project_id = "SEU_PROJECT_ID"
+
+region = "southamerica-east1"
+zone   = "southamerica-east1-a"
+
+app_name    = "glpi"
+environment = "prod"
+
+subnet_cidr = "10.10.0.0/24"
+
+admin_ip_cidr = "SEU_IP_PUBLICO/32"
+
+vm_service_account_email = "glpi-prod-sa-vm@SEU_PROJECT_ID.iam.gserviceaccount.com"
+
+machine_type       = "e2-medium"
+boot_disk_size_gb  = 30
+data_disk_size_gb  = 64
+
+ssh_username        = "glpiadmin"
+ssh_public_key_path = "~/.ssh/glpi-gcp.pub"
