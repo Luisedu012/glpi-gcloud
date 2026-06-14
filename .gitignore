@@ -46,3 +46,6 @@ terraform.tfstate
 # Ansible
 ansible/*.retry
 inventory.ini
+.env
+.venv
+venv
