@@ -1,0 +1,18 @@
+---
+- name: Atualizar cache do apt
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Atualizar pacotes instalados
+  ansible.builtin.apt:
+    upgrade: dist
+
+- name: Instalar pacotes básicos
+  ansible.builtin.apt:
+    name: "{{ base_packages }}"
+    state: present
+
+- name: Configurar timezone
+  community.general.timezone:
+    name: "{{ timezone }}"

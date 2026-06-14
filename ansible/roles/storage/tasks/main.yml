@@ -1,0 +1,36 @@
+---
+- name: Verificar se o disco de dados existe
+  ansible.builtin.stat:
+    path: "{{ glpi_data_disk_device }}"
+  register: glpi_disk
+
+- name: Falhar se o disco de dados não existir
+  ansible.builtin.fail:
+    msg: "Disco de dados não encontrado em {{ glpi_data_disk_device }}. Verifique o device_name do Terraform e o disco anexado à VM."
+  when: not glpi_disk.stat.exists
+
+- name: Verificar se o disco já possui filesystem
+  ansible.builtin.command: "blkid {{ glpi_data_disk_device }}"
+  register: glpi_disk_blkid
+  changed_when: false
+  failed_when: false
+
+- name: Criar filesystem ext4 no disco de dados se ainda não existir
+  ansible.builtin.command: "mkfs.ext4 -F {{ glpi_data_disk_device }}"
+  when: glpi_disk_blkid.rc != 0
+
+- name: Criar ponto de montagem do GLPI
+  ansible.builtin.file:
+    path: "{{ glpi_data_mountpoint }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Montar disco de dados em /opt/glpi
+  ansible.posix.mount:
+    path: "{{ glpi_data_mountpoint }}"
+    src: "{{ glpi_data_disk_device }}"
+    fstype: "{{ glpi_data_fstype }}"
+    opts: defaults,nofail
+    state: mounted

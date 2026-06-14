@@ -1,0 +1,12 @@
+---
+- name: Configurar VM para GLPI com Docker
+  hosts: glpi
+  become: true
+  gather_facts: true
+
+  roles:
+    - base
+    - security
+    - storage
+    - docker
+    - glpi_host

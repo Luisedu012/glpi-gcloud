@@ -1,0 +1,16 @@
+---
+- name: Garantir que login SSH como root esteja desabilitado
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PermitRootLogin'
+    line: 'PermitRootLogin no'
+    backup: true
+  notify: Restart ssh
+
+- name: Garantir que autenticação por senha SSH esteja desabilitada
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PasswordAuthentication'
+    line: 'PasswordAuthentication no'
+    backup: true
+  notify: Restart ssh

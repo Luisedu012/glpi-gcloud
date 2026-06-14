@@ -1,0 +1,33 @@
+---
+timezone: "America/Fortaleza"
+
+glpi_base_dir: "/opt/glpi"
+
+glpi_directories:
+  - "/opt/glpi"
+  - "/opt/glpi/app"
+  - "/opt/glpi/compose"
+  - "/opt/glpi/data"
+  - "/opt/glpi/data/glpi"
+  - "/opt/glpi/data/mariadb"
+  - "/opt/glpi/data/traefik"
+  - "/opt/glpi/backups"
+  - "/opt/glpi/logs"
+
+glpi_data_disk_device: "/dev/disk/by-id/google-glpi-prod-data"
+glpi_data_mountpoint: "/opt/glpi"
+glpi_data_fstype: "ext4"
+
+docker_users:
+  - "glpiadmin"
+
+base_packages:
+  - ca-certificates
+  - curl
+  - gnupg
+  - lsb-release
+  - git
+  - unzip
+  - htop
+  - vim
+  - jq

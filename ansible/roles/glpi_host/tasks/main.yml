@@ -1,0 +1,38 @@
+---
+- name: Criar diretórios do projeto GLPI
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: docker
+    mode: "0775"
+  loop: "{{ glpi_directories }}"
+
+- name: Criar arquivo marcador da preparação do host
+  ansible.builtin.copy:
+    dest: "{{ glpi_base_dir }}/HOST_PREPARED_BY_ANSIBLE"
+    content: |
+      Host preparado pelo Ansible para execução do GLPI.
+      Diretório base: {{ glpi_base_dir }}
+      Data: {{ ansible_date_time.iso8601 }}
+    owner: root
+    group: docker
+    mode: "0664"
+
+- name: Validar versão do Docker
+  ansible.builtin.command: docker --version
+  register: docker_version
+  changed_when: false
+
+- name: Exibir versão do Docker
+  ansible.builtin.debug:
+    var: docker_version.stdout
+
+- name: Validar versão do Docker Compose plugin
+  ansible.builtin.command: docker compose version
+  register: docker_compose_version
+  changed_when: false
+
+- name: Exibir versão do Docker Compose
+  ansible.builtin.debug:
+    var: docker_compose_version.stdout
