@@ -5,24 +5,42 @@ services:
     image: traefik:v3.4
     container_name: glpi-traefik
     restart: unless-stopped
+    environment:
+      DOCKER_API_VERSION: "1.40"
     command:
       - "--api.dashboard=false"
+
+      # Docker provider
       - "--providers.docker=true"
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
       - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=glpi_proxy"
+
+      # Entrypoints HTTP/HTTPS
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
+
+      # Redirect HTTP -> HTTPS
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+
+      # Let's Encrypt / ACME HTTP-01
       - "--certificatesresolvers.letsencrypt.acme.email=${TRAEFIK_ACME_EMAIL}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+
+      # Logs temporários para diagnóstico
+      - "--log.level=INFO"
+
     ports:
       - "80:80"
       - "443:443"
+
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "/opt/glpi/data/traefik/letsencrypt:/letsencrypt"
+
     networks:
       - proxy
 
@@ -30,40 +48,62 @@ services:
     image: "glpi/glpi:11"
     container_name: glpi-app
     restart: unless-stopped
+
     env_file:
       - .env
+
     volumes:
       - "/opt/glpi/data/glpi:/var/glpi"
+
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+
     networks:
       - proxy
       - internal
+
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=glpi_proxy"
+
+      # Router HTTPS do GLPI
       - "traefik.http.routers.glpi.rule=Host(`${GLPI_FQDN}`)"
       - "traefik.http.routers.glpi.entrypoints=websecure"
       - "traefik.http.routers.glpi.tls=true"
       - "traefik.http.routers.glpi.tls.certresolver=letsencrypt"
+
+      # Porta interna do Apache dentro do container GLPI
       - "traefik.http.services.glpi.loadbalancer.server.port=80"
 
   db:
     image: "mysql:8.4"
     container_name: glpi-db
     restart: unless-stopped
+
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: "yes"
       MYSQL_DATABASE: ${GLPI_DB_NAME}
       MYSQL_USER: ${GLPI_DB_USER}
       MYSQL_PASSWORD: ${GLPI_DB_PASSWORD}
+
     volumes:
       - "/opt/glpi/data/mysql:/var/lib/mysql"
+
     networks:
       - internal
+
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
 
 networks:
   proxy:
     name: glpi_proxy
+
   internal:
     name: glpi_internal
     internal: true
